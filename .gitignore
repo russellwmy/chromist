@@ -1,0 +1,42 @@
+# Generated files
+/target/
+Cargo.lock
+
+# IDE and editor
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+
+# Coverage
+lcov.info
+tarpaulin-report.html
+coverage/
+
+# Benchmarks
+criterion/
+
+# Claude Code — ignore runtime context, keep agent config (agents/) tracked
+.claude/settings.local.json
+.claude/agent-memory/
+.claude/worktrees/

@@ -1,0 +1,21 @@
+[package]
+name = "chromist-types"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Core CDP wire types and traits for chromist"
+keywords = ["cdp", "chrome", "devtools", "browser", "automation"]
+categories = ["web-programming", "asynchronous"]
+readme = "../../README.md"
+
+[dev-dependencies]
+proptest = "1"
+
+[dependencies]
+serde = { workspace = true, features = ["derive", "rc"] }
+serde_json.workspace = true
+base64.workspace = true

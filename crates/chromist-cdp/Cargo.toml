@@ -1,0 +1,31 @@
+[package]
+name = "chromist-cdp"
+version.workspace = true
+authors.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Generated CDP bindings for chromist"
+keywords = ["cdp", "chrome", "devtools", "browser", "protocol"]
+categories = ["web-programming", "api-bindings"]
+readme = "../../README.md"
+
+[features]
+tracing = ["dep:tracing"]
+
+[dependencies]
+chromist-types.workspace = true
+serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
+tracing = { workspace = true, optional = true }
+
+[dev-dependencies]
+chromist-pdl.workspace = true
+criterion.workspace = true
+serde_json.workspace = true
+
+[[bench]]
+name = "event_deser"
+harness = false

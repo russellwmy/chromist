@@ -1,0 +1,7 @@
+# Seeds for failure cases proptest has generated in the past. It is
+# automatically read and these particular cases re-run before any
+# novel cases are generated.
+#
+# It is recommended to check this file in to source control so that
+# everyone who runs the test benefits from these saved cases.
+cc 5e424a6ca27d1a43652f30b2e7397bbbcb7dda899f7fbe891f384f5e07f3753f # shrinks to p = Protocol { version: Version { major: "0", minor: "0" }, domains: [Domain { name: "Da", description: None, experimental: false, deprecated: false, dependencies: [], types: [TypeDef { id: "Ta", description: None, experimental: false, deprecated: false, kind: Object([]) }], commands: [], events: [] }] }
