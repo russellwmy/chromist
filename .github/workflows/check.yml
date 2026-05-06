@@ -1,8 +1,10 @@
-name: CI
+name: Check
 
 on:
   push:
     branches: [main]
+    tags:
+      - "v*"
   pull_request:
     branches: [main]
 
@@ -29,7 +31,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: cargo test
-        run: cargo test --workspace
+        run: cargo test --workspace --locked
+
+      - name: Verify generated cdp.rs is fresh
+        run: cargo test -p chromist-cdp --test generate generated_code_is_fresh --locked
 
   lint:
     name: lint
@@ -43,6 +48,15 @@ jobs:
       - run: cargo check --workspace
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
+
+  audit:
+    name: security audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: rustsec/audit-check@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   deny:
     name: cargo deny
