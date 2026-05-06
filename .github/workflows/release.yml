@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/v}
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Extracted version: $VERSION"
+
+      - name: Update workspace version
+        run: |
+          VERSION="${{ steps.get_version.outputs.version }}"
+          # Bump [workspace.package] version
+          sed -i "0,/^version = \".*\"/s//version = \"$VERSION\"/" Cargo.toml
+          # Bump internal crate versions in [workspace.dependencies]
+          sed -i "s/chromist-types = { path = \"crates\/chromist-types\", version = \".*\" }/chromist-types = { path = \"crates\/chromist-types\", version = \"$VERSION\" }/" Cargo.toml
+          sed -i "s/chromist-pdl = { path = \"crates\/chromist-pdl\", version = \".*\" }/chromist-pdl = { path = \"crates\/chromist-pdl\", version = \"$VERSION\" }/" Cargo.toml
+          sed -i "s/chromist-cdp = { path = \"crates\/chromist-cdp\", version = \".*\" }/chromist-cdp = { path = \"crates\/chromist-cdp\", version = \"$VERSION\" }/" Cargo.toml
+          sed -i "s/chromist = { path = \"crates\/chromist\", version = \".*\" }/chromist = { path = \"crates\/chromist\", version = \"$VERSION\" }/" Cargo.toml
+
+      - name: Update Cargo.lock
+        run: cargo update --workspace
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add Cargo.toml Cargo.lock
+          git commit -m "chore: bump version to ${{ steps.get_version.outputs.version }}"
+          git push origin HEAD:main
+
+      - name: Run tests
+        run: cargo test --workspace --locked
+
+      - name: Publish chromist-types
+        run: cargo publish -p chromist-types --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Publish chromist-pdl
+        run: cargo publish -p chromist-pdl --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Publish chromist-cdp
+        run: cargo publish -p chromist-cdp --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Publish chromist
+        run: cargo publish -p chromist --locked
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
