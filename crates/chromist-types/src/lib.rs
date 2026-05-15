@@ -192,6 +192,7 @@ pub struct CommandResponse<T> {
 
 /// A byte buffer that serializes as a base64-encoded string over the wire.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "compatible", derive(Default))]
 pub struct Binary(Vec<u8>);
 
 impl Binary {

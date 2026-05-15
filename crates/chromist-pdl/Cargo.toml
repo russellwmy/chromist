@@ -28,3 +28,6 @@ proptest.workspace = true
 [[bench]]
 name = "parse_and_gen"
 harness = false
+
+[features]
+compatible = []

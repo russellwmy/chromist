@@ -14,6 +14,7 @@ readme = "../../README.md"
 
 [features]
 integration-tests = []
+compatible = ["chromist-cdp/compatible", "chromist-types/compatible"]
 # Internal feature used by benches in benches/ to access `pub(crate)` types.
 # Do not enable from library consumers — the surface is unstable.
 _bench = []
