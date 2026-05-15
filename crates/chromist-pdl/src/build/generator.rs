@@ -329,6 +329,7 @@ fn generate_typedef(ty: &TypeDef, domain: &str, pdl_idx: usize, ctx: &GenContext
                 #doc
                 #deprecated_attr
                 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+                #[cfg_attr(feature = "compatible", derive(Default))]
                 pub struct #name(pub #rust_ty);
 
                 impl #name {
@@ -394,6 +395,7 @@ fn generate_typedef(ty: &TypeDef, domain: &str, pdl_idx: usize, ctx: &GenContext
                 #doc
                 #deprecated_attr
                 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+                #[cfg_attr(feature = "compatible", derive(Default))]
                 pub struct #name(pub Vec<#inner_ts>);
             }
         }
@@ -433,6 +435,7 @@ fn generate_enum_type(
         })
         .collect();
 
+    let default_first = format_ident!("{}", enum_variant_name(&variants[0].name));
     let var_idents: Vec<_> =
         variants.iter().map(|v| format_ident!("{}", enum_variant_name(&v.name))).collect();
     let str_values: Vec<&str> = variants.iter().map(|v| v.name.as_str()).collect();
@@ -489,6 +492,13 @@ fn generate_enum_type(
                 }
             }
         }
+
+        #[cfg(feature = "compatible")]
+        impl Default for #name {
+            fn default() -> Self {
+                Self::#default_first
+            }
+        }
     }
 }
 
@@ -508,9 +518,16 @@ fn generate_object_type(
 
     let has_mandatory = fields.iter().any(|f| !f.optional);
     let derives = if has_mandatory {
-        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)] }
+        quote! { 
+            #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", derive(Default))]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     } else {
-        quote! { #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     };
 
     let mut sb = StructBuilder::new(name);
@@ -549,9 +566,16 @@ fn generate_command(cmd: &Command, domain: &str, pdl_idx: usize, ctx: &GenContex
         build_fields(&cmd.parameters, &format!("{}Params", camel), domain, pdl_idx, ctx);
     let has_mandatory_params = param_fields.iter().any(|f| !f.optional);
     let param_derives = if has_mandatory_params {
-        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", derive(Default))]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     } else {
-        quote! { #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     };
 
     let mut params_sb = StructBuilder::new(params_name.clone());
@@ -564,9 +588,16 @@ fn generate_command(cmd: &Command, domain: &str, pdl_idx: usize, ctx: &GenContex
         build_fields(&cmd.returns, &format!("{}Response", camel), domain, pdl_idx, ctx);
     let has_mandatory_resp = resp_fields.iter().any(|f| !f.optional);
     let resp_derives = if has_mandatory_resp {
-        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", derive(Default))]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     } else {
-        quote! { #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     };
 
     let mut resp_sb = StructBuilder::new(response_name.clone());
@@ -628,9 +659,16 @@ fn generate_event(ev: &Event, domain: &str, pdl_idx: usize, ctx: &GenContext) ->
         build_fields(&ev.parameters, &format!("{}Event", camel), domain, pdl_idx, ctx);
     let has_mandatory = fields.iter().any(|f| !f.optional);
     let derives = if has_mandatory {
-        quote! { #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", derive(Default))]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     } else {
-        quote! { #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)] }
+        quote! {
+            #[derive(Debug, Clone, PartialEq, Default, Serialize, Deserialize)]
+            #[cfg_attr(feature = "compatible", serde(default))]
+        }
     };
 
     let mut sb = StructBuilder::new(struct_name.clone());

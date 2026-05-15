@@ -21,6 +21,11 @@ pub fn generate_domain_event_enum(domain_name: &str, events: &[Event]) -> TokenS
         return TokenStream::default();
     }
 
+    let default_first = {
+        let struct_name = format_ident!("{}Event", events[0].name.to_upper_camel_case());
+        let variant_name = format_ident!("{}", events[0].name.to_upper_camel_case());
+        quote! { #variant_name(#struct_name::default()) }
+    };
     let variant_defs: Vec<TokenStream> = events
         .iter()
         .map(|ev| {
@@ -37,10 +42,17 @@ pub fn generate_domain_event_enum(domain_name: &str, events: &[Event]) -> TokenS
     quote! {
         /// All events for this domain.
         #[non_exhaustive]
-        #[derive(Debug, Clone, serde::Deserialize)]
+        #[derive(Debug, Clone, Deserialize)]
         #[serde(tag = "method", content = "params", rename_all = "camelCase")]
         pub enum Event {
             #(#variant_defs,)*
+        }
+
+        #[cfg(feature = "compatible")]
+        impl Default for Event {
+            fn default() -> Self {
+                Self::#default_first
+            }
         }
     }
 }
