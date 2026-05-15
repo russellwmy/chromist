@@ -107,7 +107,7 @@ impl Browser {
         // mode wires this elsewhere; replicating it would double-attach.
         if !config.use_pipe {
             let mut auto_attach =
-                crate::cdp::browser_protocol::target::SetAutoAttachParams::new(true, false);
+                crate::cdp::browser_protocol::target::SetAutoAttachParams::new(true, true);
             auto_attach.flatten = Some(true);
             let _ = handle.execute(auto_attach, None).await;
             tracing::info!(ws_url = %ws_url, "browser launched successfully");
@@ -153,7 +153,7 @@ impl Browser {
         // handler's session cell is updated; without this every cross-process
         // navigation would leave page commands targeting a dead session id.
         let mut auto_attach =
-            crate::cdp::browser_protocol::target::SetAutoAttachParams::new(true, false);
+            crate::cdp::browser_protocol::target::SetAutoAttachParams::new(true, true);
         auto_attach.flatten = Some(true);
         let _ = handle.execute(auto_attach, None).await;
         let browser = Browser {
@@ -555,7 +555,7 @@ impl Browser {
         // handler's session cell is updated; without this every cross-process
         // navigation would leave page commands targeting a dead session id.
         let mut auto_attach =
-            crate::cdp::browser_protocol::target::SetAutoAttachParams::new(true, false);
+            crate::cdp::browser_protocol::target::SetAutoAttachParams::new(true, true);
         auto_attach.flatten = Some(true);
         let _ = handle.execute(auto_attach, None).await;
         let browser = Browser {

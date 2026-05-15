@@ -297,6 +297,19 @@ impl Page {
             }
         }
 
+        // Resume the target now that all CDP domains are initialised.
+        // Because SetAutoAttachParams uses wait_for_debugger_on_start=true,
+        // Chrome pauses every new target until this command is sent.
+        if let Err(e) = handle
+            .execute(
+                cdp_runtime::RunIfWaitingForDebuggerParams::default(),
+                Some(session_id.current()),
+            )
+            .await
+        {
+            tracing::warn!(error = %e, "Runtime.runIfWaitingForDebugger failed during attach");
+        }
+
         // Allocate the destroy flag *before* spawning the event task so the
         // task can react to target destruction and exit without waiting for
         // the global event channel to close.

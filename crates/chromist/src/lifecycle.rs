@@ -103,8 +103,16 @@ impl NavigationWaiter {
         // work even when lifecycle events aren't enabled on older Chrome builds.
         let accept_load_fired = condition == WaitUntil::Load;
 
+        // `Page.frameStoppedLoading` is a fallback for when fine-grained
+        // lifecycle events are missed (e.g. due to a race between page load
+        // and `Page.setLifecycleEventsEnabled`).  It implies both
+        // DOMContentLoaded and load have fired, so it satisfies Load and
+        // DOMContentLoaded conditions but NOT NetworkIdle/NetworkAlmostIdle.
+        let accept_stopped_loading =
+            matches!(condition, WaitUntil::Load | WaitUntil::DomContentLoaded);
+
         let target_frame_id = self.frame_id.take();
-        crate::runtime::timeout(self.timeout, async move {
+        match crate::runtime::timeout(self.timeout, async move {
             while let Some(frame) = self.sub.next().await {
                 if frame.method == "Page.lifecycleEvent" {
                     // When a target frame is set, skip events for other frames.
@@ -117,18 +125,31 @@ impl NavigationWaiter {
                     }
                     if let Some(n) = frame.params.get("name").and_then(|v| v.as_str()) {
                         if n == lifecycle_name {
-                            return;
+                            return Ok(());
                         }
                     }
                 } else if accept_load_fired && frame.method == "Page.loadEventFired" {
-                    return;
+                    return Ok(());
+                } else if accept_stopped_loading && frame.method == "Page.frameStoppedLoading" {
+                    if let Some(ref tid) = target_frame_id {
+                        if let Some(fid) = frame.params.get("frameId").and_then(|v| v.as_str()) {
+                            if fid == tid.inner() {
+                                return Ok(());
+                            }
+                        }
+                    } else {
+                        return Ok(());
+                    }
                 }
             }
+            Err(CdpError::ChannelClosed)
         })
         .await
-        .map_err(|_| CdpError::Timeout)?;
-
-        Ok(())
+        {
+            Ok(Ok(())) => Ok(()),
+            Ok(Err(e)) => Err(e),
+            Err(_) => Err(CdpError::Timeout),
+        }
     }
 }
 
